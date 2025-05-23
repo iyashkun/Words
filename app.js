@@ -1,46 +1,51 @@
 const { Bot } = require("grammy");
-const randomWords = require("random-words");
 
 const bot = new Bot("8159999156:AAFOqpydahyx45IWID9-s6N-kQW5Qo6EClc");
 const CHANNEL_ID = "-1002406357808";
 
 let interval = null;
-const sentWords = new Set();
+const sentCombos = new Set();
 
-function generateFiveLetterWords(count = 50) {
-  const result = [];
-  while (result.length < count) {
-    const word = randomWords({ exactly: 1, maxLength: 5, formatter: w => w.toLowerCase() })[0];
-    if (word.length === 5 && /^[a-z]{5}$/.test(word) && !sentWords.has(word)) {
-      sentWords.add(word);
-      result.push(word);
+function randomUsername() {
+  const letters = "abcdefghijklmnopqrstuvwxyz";
+  let username = "";
+  while (username.length < 5) {
+    username += letters.charAt(Math.floor(Math.random() * letters.length));
+  }
+  return username;
+}
+
+function generatePairs(count = 50) {
+  const pairs = [];
+  while (pairs.length < count) {
+    const user1 = randomUsername();
+    const user2 = randomUsername();
+    const comboKey = `${user1}|${user2}`;
+    if (!sentCombos.has(comboKey)) {
+      sentCombos.add(comboKey);
+      pairs.push({ user1, user2 });
     }
   }
-  return result;
+  return pairs;
 }
 
-function sendWordsToChannel() {
-  const words = generateFiveLetterWords(50);
-  const message = words.map((w, i) => `${i + 1}. ${w} @${generateRandomUsername()}`).join("\n");
+function sendMessage() {
+  const pairs = generatePairs();
+  const message = pairs.map((pair, i) => `${i + 1}. @${pair.user1} | @${pair.user2}`).join("\n");
   bot.api.sendMessage(CHANNEL_ID, message);
-}
-
-function generateRandomUsername() {
-  const username = randomWords({ exactly: 1, maxLength: 5 })[0];
-  return /^[a-z]{5}$/.test(username) ? username : "user" + Math.floor(Math.random() * 9999);
 }
 
 bot.command("start_process", (ctx) => {
   if (interval) return ctx.reply("Already running.");
-  interval = setInterval(sendWordsToChannel, 10000);
-  ctx.reply("Process started. Sending words every 10 seconds.");
+  interval = setInterval(sendMessage, 10000);
+  ctx.reply("Started sending every 10s.");
 });
 
 bot.command("stop_process", (ctx) => {
-  if (!interval) return ctx.reply("No process running.");
+  if (!interval) return ctx.reply("Not running.");
   clearInterval(interval);
   interval = null;
-  ctx.reply("Process stopped.");
+  ctx.reply("Stopped.");
 });
 
 bot.start();
