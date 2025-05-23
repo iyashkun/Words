@@ -1,0 +1,13 @@
+{
+  "name": "telegram-word-bot",
+  "version": "1.0.0",
+  "description": "Telegram bot that sends 5-letter words every 10 seconds",
+  "main": "bot.js",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "dependencies": {
+    "grammy": "^1.19.0",
+    "random-words": "^1.1.1"
+  }
+}
